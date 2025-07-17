@@ -7,8 +7,6 @@ function generateGuestName() {
 
 export async function handler(event) {
   try {
-    console.log(event.body);
-    
     const { description, photo_url, lat, lon } = JSON.parse(event.body);
 
     if (!description || !photo_url) {
@@ -22,8 +20,8 @@ export async function handler(event) {
       VALUES (${description}, ${photo_url}, ${lat}, ${lon}, ${creator})
     `;
 
-    return { statusCode: 201, body: JSON.stringify({ success: true, creator }) };
+    return { statusCode: 201, body: JSON.stringify({ success: true, creator }), event};
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    return { statusCode: 500, body: JSON.stringify({ error: err.message }) ,event};
   }
 }

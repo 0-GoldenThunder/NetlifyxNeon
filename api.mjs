@@ -14,15 +14,10 @@ const API = {
   token: "",
 
   async setToken(value) {
-    console.log(this.token);
-    
-
     this.token = value || "";
   },
 
   async getToken() {
-    console.log(this.token);
-    
     return this.token;
   },
 
@@ -82,6 +77,8 @@ const API = {
 
     if (!isGuest) {
       const token = await this.getToken();
+      console.log(token);
+      
       headers.Authorization = `Bearer ${token}`;
     }
 
