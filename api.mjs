@@ -33,12 +33,12 @@ const API = {
     }
   },
 
-  async registerUser(name, email, password) {
+  async registerUser(username, email, password) {
     try {
       const res = await fetch(this.ENDPOINTS.REGISTER, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ username, email, password }),
       });
       return await res.json();
     } catch (err) {
