@@ -23,7 +23,7 @@ function delay(ms) {
   console.log("\n📝 Submitting authenticated story...");
   const userStory = await API.addStory({
     description: "A story from Tsaqif!",
-    photo: new Blob(["image-data"], { type: "image/jpeg" }),
+    photo_url: new Blob(["image-data"], { type: "image/jpeg" }),
     lat: -1.23,
     lon: 116.85,
   });
@@ -33,7 +33,7 @@ function delay(ms) {
   console.log("\n🙈 Submitting guest story...");
   const guestStory = await API.addStoryGuest({
     description: "Anonymous guest story",
-    photo: new Blob(["image-data"], { type: "image/jpeg" }),
+    photo_url: new Blob(["image-data"], { type: "image/jpeg" }),
     lat: -1.25,
     lon: 116.89,
   });

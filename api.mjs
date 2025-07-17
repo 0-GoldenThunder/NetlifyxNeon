@@ -14,10 +14,15 @@ const API = {
   token: "",
 
   async setToken(value) {
+    console.log(this.token);
+    
+
     this.token = value || "";
   },
 
   async getToken() {
+    console.log(this.token);
+    
     return this.token;
   },
 
@@ -63,10 +68,10 @@ const API = {
     }
   },
 
-  async uploadStory({ description, photo, lat = null, lon = null }, isGuest = false) {
+  async uploadStory({ description, photo_url, lat = null, lon = null }, isGuest = false) {
     const formData = new FormData();
     formData.append("description", description);
-    formData.append("photo", photo);
+    formData.append("photo_url", photo_url);
     if (lat !== null) formData.append("lat", lat);
     if (lon !== null) formData.append("lon", lon);
 
