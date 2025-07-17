@@ -1,242 +1,163 @@
-// import {
-//   storePendingStory,
-//   getUserSession,
-// } from "../utils/db.js"; // Import IndexedDB 
-
-const BASE_URL = 'http://localhost:8888/.netlify/functions'
+const BASE_URL = "http://localhost:8888/.netlify/functions";
 
 const API = {
   ENDPOINTS: {
     REGISTER: `${BASE_URL}/register`,
-    LOGIN: `${BASE_URL}/login`, 
+    LOGIN: `${BASE_URL}/login`,
     ADD_STORY: `${BASE_URL}/addStory`,
-    ADD_STORY_GUEST: `${BASE_URL}/stories/guest`,
+    ADD_STORY_GUEST: `${BASE_URL}/guestStory`,
     GET_ALL_STORIES: `${BASE_URL}/getAllStories`,
     SUBSCRIBE_NOTIFICATIONS: `${BASE_URL}/notifications/subscribe`,
     CONNECT: `${BASE_URL}/test`,
   },
-  
+
+  token: "",
+
+  async setToken(value) {
+    this.token = value || "";
+  },
+
   async getToken() {
-    // const session = await getUserSession(); // Retrieve token from IndexedDB
-    return session?.token || "";
+    return this.token;
   },
 
   async checkConnectionStatus() {
-  try {
-    const response = await fetch(this.ENDPOINTS.CONNECT);
-    const result = await response.json();
-
-    if (response.ok) {
-      console.log("✅ Connected:", result.success);
-    } else {
-      console.warn("⚠️ Connection issue:", result.success || result.error);
+    try {
+      const res = await fetch(this.ENDPOINTS.CONNECT);
+      const result = await res.json();
+      console.log(res.ok ? "✅ Connected" : "⚠️ Connection issue", result);
+      return result;
+    } catch (err) {
+      console.error("❌ Network error:", err.message);
+      return { success: false, error: err.message };
     }
-
-    return result;
-  } catch (error) {
-    console.error("❌ Network error:", error.message);
-    return { success: false, message: "Failed to reach server", error };
-  }
-},
+  },
 
   async registerUser(name, email, password) {
     try {
-      const response = await fetch(this.ENDPOINTS.REGISTER, {
+      const res = await fetch(this.ENDPOINTS.REGISTER, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
-      return await response.json();
-    } catch (error) {
-      console.error("Error:", error.message);
+      return await res.json();
+    } catch (err) {
+      console.error("Registration failed:", err.message);
+      return { success: false };
     }
   },
 
   async loginUser(email, password) {
     try {
-      const response = await fetch(this.ENDPOINTS.LOGIN, {
+      const res = await fetch(this.ENDPOINTS.LOGIN, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      return await response.json();
-    } catch (error) {
-      console.error("Error:", error.message);
+      const result = await res.json();
+      if (result.token) await this.setToken(result.token);
+      return result;
+    } catch (err) {
+      console.error("Login error:", err.message);
+      return { success: false };
     }
   },
 
-  async addStory(description, photo, lat = null, lon = null) {
-    try {
-      // Ensure inputs are provided
-      if (!description || !photo) {
-        throw new Error("Description and photo are required!");
-      }
+  async uploadStory({ description, photo, lat = null, lon = null }, isGuest = false) {
+    const formData = new FormData();
+    formData.append("description", description);
+    formData.append("photo", photo);
+    if (lat !== null) formData.append("lat", lat);
+    if (lon !== null) formData.append("lon", lon);
 
-      const formData = new FormData();
-      formData.append("description", description);
-      formData.append("photo", photo);
-      if (lat !== null) formData.append("lat", lat);
-      if (lon !== null) formData.append("lon", lon);
+    const endpoint = isGuest ? this.ENDPOINTS.ADD_STORY_GUEST : this.ENDPOINTS.ADD_STORY;
+    const headers = {};
 
-      // Debug FormData entries
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
-
-      // Await token retrieval properly
+    if (!isGuest) {
       const token = await this.getToken();
+      headers.Authorization = `Bearer ${token}`;
+    }
 
-      const response = await fetch(this.ENDPOINTS.ADD_STORY, {
+    try {
+      const res = await fetch(endpoint, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers,
         body: formData,
       });
+      const result = await res.json();
 
-      if (!response.ok) {
-        const errorText = await response.json(); // Log server error
-        console.error("Server Response:", errorText.message);
-        alert(`Error: ${errorText.message}`);
+      if (!res.ok) {
+        console.error("Upload error:", result.message);
+        alert(`Upload failed: ${result.message}`);
       }
 
-      return await response.json();
-    } catch (error) {
-      console.warn("Offline detected, storing story locally...");
-      await storePendingStory({ description, photo, lat, lon });
+      return result;
+    } catch (err) {
+      console.error("Upload failed:", err.message);
+      return { success: false };
     }
   },
 
-  async addStoryGuest(description, photo, lat = null, lon = null) {
-    try {
-      // Ensure inputs are provided
-      if (!description || !photo) {
-        throw new Error("Description and photo are required!");
-      }
+  async addStory(...args) {
+    return this.uploadStory(...args, false);
+  },
 
-      const formData = new FormData();
-      formData.append("description", description);
-      formData.append("photo", photo);
-      if (lat !== null) formData.append("lat", lat);
-      if (lon !== null) formData.append("lon", lon);
-
-      // Debug FormData entries
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
-
-      const response = await fetch(this.ENDPOINTS.ADD_STORY_GUEST, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.json(); // Log server error
-        console.error("Server Response:", errorText.message);
-        alert(`Error: ${errorText.message}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.warn("Offline detected, storing story locally...");
-      await storePendingStory({ description, photo, lat, lon });
-    }
+  async addStoryGuest(...args) {
+    return this.uploadStory(...args, true);
   },
 
   async getAllStories() {
     try {
-      // Await token retrieval properly
-      // const token = await this.getToken();
-
-      const response = await fetch(this.ENDPOINTS.GET_ALL_STORIES, {
-        method: "GET",
-        // headers: {
-          // Authorization: `Bearer ${token}`,
-        // },
-      });
-
-      if (!response.ok) throw new Error("Failed to fetch stories");
-
-      const stories = await response.json();
-      
-      console.log(stories.listStory);
-      return stories;
-    } catch (error) {
-      console.warn("Network error, loading cached stories...");
-      console.error("Error:", error.message);
-      
-
-      // Load from cache when offline workbox
-    // const cache = await caches.open("story-api");
-    // const cachedResponse = await cache.match(this.ENDPOINTS.GET_ALL_STORIES);
-
-    // return cachedResponse ? await cachedResponse.json() : { listStory: [] };
+      const res = await fetch(this.ENDPOINTS.GET_ALL_STORIES);
+      if (!res.ok) throw new Error("Failed to fetch stories");
+      return await res.json();
+    } catch (err) {
+      console.error("Fetch error:", err.message);
+      return { listStory: [], error: err.message };
     }
   },
 
   async subscribeToNotifications(endpoint, keys) {
-  const token = await this.getToken();
-  
-  // Destructure the keys for clarity
-  const { p256dh, auth } = keys;
-  
-  // Construct the request payload as documented
-  const body = {
-    endpoint,
-    keys: { "auth": auth, "p256dh": p256dh},
-  };
-  
-
-  const response = await fetch(this.ENDPOINTS.SUBSCRIBE_NOTIFICATIONS, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-      const errorData = await response.text();
-      console.error("Subscription failed (Option A):", errorData);
-  }
- 
-  // Parse the success response
-  const responseData = await response.json();
-  console.log("Subscription succeeded, response:", responseData);
-  return responseData;
-},
-
+    try {
+      const token = await this.getToken();
+      const res = await fetch(this.ENDPOINTS.SUBSCRIBE_NOTIFICATIONS, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ endpoint, keys }),
+      });
+      return await res.json();
+    } catch (err) {
+      console.error("Subscription failed:", err.message);
+      return { success: false };
+    }
+  },
 
   async unsubscribeFromNotifications(endpoint) {
-    const token = await this.getToken();
-    const body = { endpoint };
-
-    const response = await fetch(this.ENDPOINTS.SUBSCRIBE_NOTIFICATIONS, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Unsubscription failed: ${response.statusText}`);
+    try {
+      const token = await this.getToken();
+      const res = await fetch(this.ENDPOINTS.SUBSCRIBE_NOTIFICATIONS, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ endpoint }),
+      });
+      return await res.json();
+    } catch (err) {
+      console.error("Unsubscription failed:", err.message);
+      return { success: false };
     }
-    return await response.json();
   },
 
   async triggerNotification(payload) {
-    // Simulated trigger for push notifications.
-    console.log("Simulating triggerNotification with payload:", payload);
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        console.log("Notification triggered (simulated).");
-        resolve({
-          success: true,
-          message: "Notification triggered successfully (simulated).",
-        });
-      }, 500);
-    });
+    console.log("Triggering simulated notification:", payload);
+    return new Promise((resolve) =>
+      setTimeout(() => resolve({ success: true, message: "Simulated notification sent." }), 500)
+    );
   },
 };
 
