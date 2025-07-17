@@ -144,27 +144,31 @@ const API = {
   async getAllStories() {
     try {
       // Await token retrieval properly
-      const token = await this.getToken();
+      // const token = await this.getToken();
 
       const response = await fetch(this.ENDPOINTS.GET_ALL_STORIES, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        // headers: {
+          // Authorization: `Bearer ${token}`,
+        // },
       });
 
       if (!response.ok) throw new Error("Failed to fetch stories");
 
       const stories = await response.json();
+      
+      console.log(stories.listStory);
       return stories;
     } catch (error) {
       console.warn("Network error, loading cached stories...");
+      console.error("Error:", error.message);
+      
 
-      // Load from cache when offline
-    const cache = await caches.open("story-api");
-    const cachedResponse = await cache.match(this.ENDPOINTS.GET_ALL_STORIES);
+      // Load from cache when offline workbox
+    // const cache = await caches.open("story-api");
+    // const cachedResponse = await cache.match(this.ENDPOINTS.GET_ALL_STORIES);
 
-    return cachedResponse ? await cachedResponse.json() : { listStory: [] };
+    // return cachedResponse ? await cachedResponse.json() : { listStory: [] };
     }
   },
 
