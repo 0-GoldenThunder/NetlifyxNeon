@@ -3,16 +3,17 @@
 //   getUserSession,
 // } from "../utils/db.js"; // Import IndexedDB 
 
-const BASE_URL = 'http://localhost:8888/.netlify/functions/'
+const BASE_URL = 'http://localhost:8888/.netlify/functions'
 
 const API = {
   ENDPOINTS: {
     REGISTER: `${BASE_URL}/register`,
-    LOGIN: `${BASE_URL}/login`,
-    ADD_STORY: `${BASE_URL}/stories`,
+    LOGIN: `${BASE_URL}/login`, 
+    ADD_STORY: `${BASE_URL}/addStory`,
     ADD_STORY_GUEST: `${BASE_URL}/stories/guest`,
-    GET_ALL_STORIES: `${BASE_URL}/stories`,
+    GET_ALL_STORIES: `${BASE_URL}/getAllStories`,
     SUBSCRIBE_NOTIFICATIONS: `${BASE_URL}/notifications/subscribe`,
+    CONNECT: `${BASE_URL}/test`,
   },
   
   async getToken() {
@@ -22,13 +23,13 @@ const API = {
 
   async checkConnectionStatus() {
   try {
-    const response = await fetch("/.netlify/functions/test");
+    const response = await fetch(this.ENDPOINTS.CONNECT);
     const result = await response.json();
 
     if (response.ok) {
-      console.log("✅ Connected:", result.message);
+      console.log("✅ Connected:", result.success);
     } else {
-      console.warn("⚠️ Connection issue:", result.message || result.error);
+      console.warn("⚠️ Connection issue:", result.success || result.error);
     }
 
     return result;
