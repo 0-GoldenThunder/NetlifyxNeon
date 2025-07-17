@@ -1,37 +1,29 @@
 import { sql } from "../../lib/db.js";
-import { IncomingForm } from "formidable";
 
-export const config = {
-  bodyParser: false, // disable default parser
-};
+function generateGuestName() {
+  const random = Math.floor(1000 + Math.random() * 9000);
+  return `guest_${random}`;
+}
 
 export async function handler(event) {
-  return new Promise((resolve, reject) => {
-    const form = new IncomingForm();
+  try {
+    console.log(event.body);
+    
+    const { description, photo_url, lat, lon } = JSON.parse(event.body);
 
-    form.parse(event, async (err, fields, files) => {
-      if (err) {
-        return resolve({
-          statusCode: 500,
-          body: JSON.stringify({ error: "Form parsing failed" }),
-        });
-      }
+    if (!description || !photo_url) {
+      return { statusCode: 400, body: JSON.stringify({ error: "Missing required fields" }) };
+    }
 
-      const { description, lat, lon } = fields;
-      const photo = files.photo; // contains file metadata
+    const creator = generateGuestName();
 
-      // Insert into NeonDB with creator = guest_xxxx
-      const creator = `guest_${Math.floor(1000 + Math.random() * 9000)}`;
+    await sql`
+      INSERT INTO stories (description, photo_url, lat, lon, creator)
+      VALUES (${description}, ${photo_url}, ${lat}, ${lon}, ${creator})
+    `;
 
-      await sql`
-        INSERT INTO stories (description, photo_url, lat, lon, creator)
-        VALUES (${description}, ${photo?.filepath || "unknown"}, ${lat}, ${lon}, ${creator})
-      `;
-
-      resolve({
-        statusCode: 201,
-        body: JSON.stringify({ success: true, creator }),
-      });
-    });
-  });
+    return { statusCode: 201, body: JSON.stringify({ success: true, creator }) };
+  } catch (err) {
+    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+  }
 }
