@@ -11,6 +11,7 @@
   "description": "",
   "dependencies": {
     "@netlify/neon": "^0.1.0",
+    "jsonwebtoken": "^9.0.2",
     "netlify-cli": "^22.2.2"
   }
 }
