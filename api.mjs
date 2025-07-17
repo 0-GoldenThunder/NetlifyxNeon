@@ -69,6 +69,8 @@ const API = {
   },
 
   async uploadStory({ description, photo_url, lat = null, lon = null }, isGuest = false) {
+    console.log(photo_url);
+    
     const formData = new FormData();
     formData.append("description", description);
     formData.append("photo_url", photo_url);
@@ -84,6 +86,8 @@ const API = {
     }
 
     try {
+      console.log(formData);
+      
       const res = await fetch(endpoint, {
         method: "POST",
         headers,

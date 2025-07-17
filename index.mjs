@@ -11,8 +11,8 @@ function delay(ms) {
   await delay(800);
 
   console.log("\n👤 Registering new user...");
-  const register = await API.registerUser("Tsaqif", "tsaqif@example.com", "testpass123");
-  console.log("Register:", register);
+//   const register = await API.registerUser("Tsaqif", "tsaqif@example.com", "testpass123");
+//   console.log("Register:", register);
   await delay(800);
 
   console.log("\n🔐 Logging in...");
@@ -23,7 +23,7 @@ function delay(ms) {
   console.log("\n📝 Submitting authenticated story...");
   const userStory = await API.addStory({
     description: "A story from Tsaqif!",
-    photo_url: new Blob(["image-data"], { type: "image/jpeg" }),
+    photo_url: "Replace this with actual photo data url",
     lat: -1.23,
     lon: 116.85,
   });
@@ -33,7 +33,7 @@ function delay(ms) {
   console.log("\n🙈 Submitting guest story...");
   const guestStory = await API.addStoryGuest({
     description: "Anonymous guest story",
-    photo_url: new Blob(["image-data"], { type: "image/jpeg" }),
+    photo_url: "Replace this with actual photo data url",
     lat: -1.25,
     lon: 116.89,
   });
