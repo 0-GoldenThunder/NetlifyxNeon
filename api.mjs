@@ -63,28 +63,36 @@ const API = {
     }
   },
 
-  async uploadStory({ description, photo_url, lat = null, lon = null }, isGuest = false) {
-    console.log(photo_url);
-    
-    const formData = new FormData();
-    formData.append("description", description);
-    formData.append("photo_url", photo_url);
-    if (lat !== null) formData.append("lat", lat);
-    if (lon !== null) formData.append("lon", lon);
+  async uploadStory(
+    { description, photo_url, lat = null, lon = null },
+    isGuest = false
+  ) {
+    const formData = {
+      description: description,
+      photo_url: photo_url,
+      lat: lat,
+      lon: lon,
+    };
+    // formData.append("description", description);
+    // formData.append("photo_url", photo_url);
+    // if (lat !== null) formData.append("lat", lat);
+    // if (lon !== null) formData.append("lon", lon);
 
-    const endpoint = isGuest ? this.ENDPOINTS.ADD_STORY_GUEST : this.ENDPOINTS.ADD_STORY;
+    const endpoint = isGuest
+      ? this.ENDPOINTS.ADD_STORY_GUEST
+      : this.ENDPOINTS.ADD_STORY;
     const headers = {};
 
     if (!isGuest) {
       const token = await this.getToken();
       console.log(token);
-      
+
       headers.Authorization = `Bearer ${token}`;
     }
 
     try {
-      console.log(formData);
-      
+      console.log(headers.Authorization);
+
       const res = await fetch(endpoint, {
         method: "POST",
         headers,
@@ -162,7 +170,11 @@ const API = {
   async triggerNotification(payload) {
     console.log("Triggering simulated notification:", payload);
     return new Promise((resolve) =>
-      setTimeout(() => resolve({ success: true, message: "Simulated notification sent." }), 500)
+      setTimeout(
+        () =>
+          resolve({ success: true, message: "Simulated notification sent." }),
+        500
+      )
     );
   },
 };
