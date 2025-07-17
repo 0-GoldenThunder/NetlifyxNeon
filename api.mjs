@@ -20,6 +20,24 @@ const API = {
     return session?.token || "";
   },
 
+  async checkConnectionStatus() {
+  try {
+    const response = await fetch("/.netlify/functions/test");
+    const result = await response.json();
+
+    if (response.ok) {
+      console.log("✅ Connected:", result.message);
+    } else {
+      console.warn("⚠️ Connection issue:", result.message || result.error);
+    }
+
+    return result;
+  } catch (error) {
+    console.error("❌ Network error:", error.message);
+    return { success: false, message: "Failed to reach server", error };
+  }
+},
+
   async registerUser(name, email, password) {
     try {
       const response = await fetch(this.ENDPOINTS.REGISTER, {
