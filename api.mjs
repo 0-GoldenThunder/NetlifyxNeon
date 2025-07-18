@@ -8,6 +8,7 @@ const API = {
     ADD_STORY_GUEST: `${BASE_URL}/guestStory`,
     GET_ALL_STORIES: `${BASE_URL}/getAllStories`,
     SUBSCRIBE_NOTIFICATIONS: `${BASE_URL}/notifications/subscribe`,
+    UNSUBSCRIBE_NOTIFICATIONS: `${BASE_URL}/notifications/unsubscribe`,
     CONNECT: `${BASE_URL}/test`,
   },
 
@@ -21,10 +22,19 @@ const API = {
     return this.token;
   },
 
+  async safeParse(res) {
+    try {
+      return await res.json();
+    } catch {
+      const text = await res.text();
+      return { success: false, error: "Non-JSON response", raw: text };
+    }
+  },
+
   async checkConnectionStatus() {
     try {
       const res = await fetch(this.ENDPOINTS.CONNECT);
-      const result = await res.json();
+      const result = await this.safeParse(res);
       console.log(res.ok ? "✅ Connected" : "⚠️ Connection issue", result);
       return result;
     } catch (err) {
@@ -34,148 +44,112 @@ const API = {
   },
 
   async registerUser(username, email, password) {
-    try {
-      const res = await fetch(this.ENDPOINTS.REGISTER, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password }),
-      });
-      return await res.json();
-    } catch (err) {
-      console.error("Registration failed:", err.message);
-      return { success: false };
-    }
+    return this.postJSON(this.ENDPOINTS.REGISTER, { username, email, password });
   },
 
   async loginUser(email, password) {
-    try {
-      const res = await fetch(this.ENDPOINTS.LOGIN, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const result = await res.json();
-      if (result.token) await this.setToken(result.token);
-      return result;
-    } catch (err) {
-      console.error("Login error:", err.message);
-      return { success: false };
-    }
+    const result = await this.postJSON(this.ENDPOINTS.LOGIN, { email, password });
+    if (result.token) await this.setToken(result.token);
+    return result;
   },
 
-  async uploadStory(story, isGuest = false) {
-    console.log(story);
-
-    const formData = story;
-    // formData.append("description", description);
-    // formData.append("photo_url", photo_url);
-    // if (lat !== null) formData.append("lat", lat);
-    // if (lon !== null) formData.append("lon", lon);
-
-    const endpoint = isGuest
-      ? this.ENDPOINTS.ADD_STORY_GUEST
-      : this.ENDPOINTS.ADD_STORY;
-    const headers = {};
+  async uploadStory(payload, isGuest = false) {
+    const endpoint = isGuest ? this.ENDPOINTS.ADD_STORY_GUEST : this.ENDPOINTS.ADD_STORY;
+    const headers = { "Content-Type": "application/json" };
 
     if (!isGuest) {
       const token = await this.getToken();
-      console.log(token);
-
       headers.Authorization = `Bearer ${token}`;
     }
 
     try {
-      console.log(headers.Authorization);
-
       const res = await fetch(endpoint, {
         method: "POST",
         headers,
-        body: formData,
+        body: JSON.stringify(payload),
       });
-      const result = await res.json();
 
-      if (!res.ok) {
-        try {
-          const err = await res.json();
-          console.error("Server Error:", err.error);
-        } catch (e) {
-          const text = await res.text();
-          console.error("Non-JSON response:", text);
-        }
-      }
-
-      console.log(result);
+      const result = await this.safeParse(res);
+      if (!res.ok) console.error("❌ Upload error:", result.error || result);
 
       return result;
     } catch (err) {
-      console.error("Upload failed:", err);
+      console.error("Upload failed:", err.message);
       return { success: false };
     }
   },
 
-  async addStory(...args) {
-    return this.uploadStory(...args, false);
+  async addStory(payload) {
+    return this.uploadStory(payload, false);
   },
 
-  async addStoryGuest(...args) {
-    return this.uploadStory(...args, true);
+  async addStoryGuest(payload) {
+    return this.uploadStory(payload, true);
   },
 
   async getAllStories() {
     try {
       const res = await fetch(this.ENDPOINTS.GET_ALL_STORIES);
-      if (!res.ok) throw new Error("Failed to fetch stories");
+      if (!res.ok) throw new Error("Fetch failed");
       return await res.json();
     } catch (err) {
-      console.error("Fetch error:", err.message);
+      console.error("Story fetch error:", err.message);
       return { listStory: [], error: err.message };
     }
   },
 
   async subscribeToNotifications(endpoint, keys) {
+    const token = await this.getToken();
+    return this.postJSON(this.ENDPOINTS.SUBSCRIBE_NOTIFICATIONS, { endpoint, keys }, token);
+  },
+
+  async unsubscribeFromNotifications(endpoint) {
+    const token = await this.getToken();
+    return this.deleteJSON(this.ENDPOINTS.UNSUBSCRIBE_NOTIFICATIONS, { endpoint }, token);
+  },
+
+  async postJSON(url, payload, token = null) {
+    const headers = {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    };
+
     try {
-      const token = await this.getToken();
-      const res = await fetch(this.ENDPOINTS.SUBSCRIBE_NOTIFICATIONS, {
+      const res = await fetch(url, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ endpoint, keys }),
+        headers,
+        body: JSON.stringify(payload),
       });
-      return await res.json();
+      return await this.safeParse(res);
     } catch (err) {
-      console.error("Subscription failed:", err.message);
+      console.error("POST error:", err.message);
       return { success: false };
     }
   },
 
-  async unsubscribeFromNotifications(endpoint) {
+  async deleteJSON(url, payload, token = null) {
+    const headers = {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    };
+
     try {
-      const token = await this.getToken();
-      const res = await fetch(this.ENDPOINTS.SUBSCRIBE_NOTIFICATIONS, {
+      const res = await fetch(url, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ endpoint }),
+        headers,
+        body: JSON.stringify(payload),
       });
-      return await res.json();
+      return await this.safeParse(res);
     } catch (err) {
-      console.error("Unsubscription failed:", err.message);
+      console.error("DELETE error:", err.message);
       return { success: false };
     }
   },
 
   async triggerNotification(payload) {
-    console.log("Triggering simulated notification:", payload);
+    console.log("🚀 Simulated notification payload:", payload);
     return new Promise((resolve) =>
-      setTimeout(
-        () =>
-          resolve({ success: true, message: "Simulated notification sent." }),
-        500
-      )
+      setTimeout(() => resolve({ success: true, message: "Simulated push sent." }), 500)
     );
   },
 };
