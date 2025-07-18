@@ -7,8 +7,8 @@ const API = {
     ADD_STORY: `${BASE_URL}/addStory`,
     ADD_STORY_GUEST: `${BASE_URL}/guestStory`,
     GET_ALL_STORIES: `${BASE_URL}/getAllStories`,
-    SUBSCRIBE_NOTIFICATIONS: `${BASE_URL}/notifications/subscribe`,
-    UNSUBSCRIBE_NOTIFICATIONS: `${BASE_URL}/notifications/unsubscribe`,
+    SUBSCRIBE_NOTIFICATIONS: `${BASE_URL}/notifications-subscribe`,
+    UNSUBSCRIBE_NOTIFICATIONS: `${BASE_URL}/notifications-unsubscribe`,
     CONNECT: `${BASE_URL}/test`,
   },
 
@@ -26,8 +26,7 @@ const API = {
     try {
       return await res.json();
     } catch {
-      const text = await res.text();
-      return { success: false, error: "Non-JSON response", raw: text };
+      return { success: false, error: "Non-JSON response" };
     }
   },
 
@@ -44,17 +43,26 @@ const API = {
   },
 
   async registerUser(username, email, password) {
-    return this.postJSON(this.ENDPOINTS.REGISTER, { username, email, password });
+    return this.postJSON(this.ENDPOINTS.REGISTER, {
+      username,
+      email,
+      password,
+    });
   },
 
   async loginUser(email, password) {
-    const result = await this.postJSON(this.ENDPOINTS.LOGIN, { email, password });
+    const result = await this.postJSON(this.ENDPOINTS.LOGIN, {
+      email,
+      password,
+    });
     if (result.token) await this.setToken(result.token);
     return result;
   },
 
   async uploadStory(payload, isGuest = false) {
-    const endpoint = isGuest ? this.ENDPOINTS.ADD_STORY_GUEST : this.ENDPOINTS.ADD_STORY;
+    const endpoint = isGuest
+      ? this.ENDPOINTS.ADD_STORY_GUEST
+      : this.ENDPOINTS.ADD_STORY;
     const headers = { "Content-Type": "application/json" };
 
     if (!isGuest) {
@@ -100,12 +108,20 @@ const API = {
 
   async subscribeToNotifications(endpoint, keys) {
     const token = await this.getToken();
-    return this.postJSON(this.ENDPOINTS.SUBSCRIBE_NOTIFICATIONS, { endpoint, keys }, token);
+    return this.postJSON(
+      this.ENDPOINTS.SUBSCRIBE_NOTIFICATIONS,
+      { endpoint, keys },
+      token
+    );
   },
 
   async unsubscribeFromNotifications(endpoint) {
     const token = await this.getToken();
-    return this.deleteJSON(this.ENDPOINTS.UNSUBSCRIBE_NOTIFICATIONS, { endpoint }, token);
+    return this.deleteJSON(
+      this.ENDPOINTS.UNSUBSCRIBE_NOTIFICATIONS,
+      { endpoint },
+      token
+    );
   },
 
   async postJSON(url, payload, token = null) {
@@ -120,6 +136,10 @@ const API = {
         headers,
         body: JSON.stringify(payload),
       });
+      console.log("🔍 Response headers:", [...res.headers.entries()]);
+      const rawText = await res.clone().text(); // clone avoids stream re-read
+      console.log("📦 Raw response body:", rawText);
+
       return await this.safeParse(res);
     } catch (err) {
       console.error("POST error:", err.message);
@@ -139,6 +159,10 @@ const API = {
         headers,
         body: JSON.stringify(payload),
       });
+      console.log("🔍 Response headers:", [...res.headers.entries()]);
+      const rawText = await res.clone().text(); // clone avoids stream re-read
+      console.log("📦 Raw response body:", rawText);
+
       return await this.safeParse(res);
     } catch (err) {
       console.error("DELETE error:", err.message);
@@ -149,7 +173,10 @@ const API = {
   async triggerNotification(payload) {
     console.log("🚀 Simulated notification payload:", payload);
     return new Promise((resolve) =>
-      setTimeout(() => resolve({ success: true, message: "Simulated push sent." }), 500)
+      setTimeout(
+        () => resolve({ success: true, message: "Simulated push sent." }),
+        500
+      )
     );
   },
 };
