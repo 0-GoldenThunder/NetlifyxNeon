@@ -1,21 +1,31 @@
 import { sql } from "../../lib/db.js";
 
 function generateGuestName() {
-  const random = Math.floor(1000 + Math.random() * 9000);
-  return `guest_${random}`;
+  return `guest_${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
 export async function handler(event) {
+  let body;
+
   try {
-    const { description, photo_url, lat, lon } = JSON.parse(event.body);
+    body = JSON.parse(event.body);
+  } catch (parseErr) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: "Invalid JSON payload" }),
+    };
+  }
 
-    if (!description || !photo_url) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: "Missing required fields" }),
-      };
-    }
+  const { description, photo_url, lat, lon } = body;
 
+  if (!description || !photo_url) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: "Missing required fields: description or photo_url" }),
+    };
+  }
+
+  try {
     const creator = generateGuestName();
 
     await sql`
@@ -28,14 +38,13 @@ export async function handler(event) {
       body: JSON.stringify({ success: true, creator }),
     };
   } catch (err) {
-    const safeError = {
-      error: err?.message || "Unexpected error",
-      details: err?.stack || null,
-    };
-
+    console.error("📛 Database error:", err.message);
     return {
       statusCode: 500,
-      body: JSON.stringify(safeError),
+      body: JSON.stringify({
+        error: "Server error during story insertion",
+        reason: err.message,
+      }),
     };
   }
 }

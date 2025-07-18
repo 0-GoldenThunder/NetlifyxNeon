@@ -94,12 +94,12 @@ const API = {
       });
       const result = await res.json();
 
-      if (!response.ok) {
+      if (!res.ok) {
         try {
-          const err = await response.json();
+          const err = await res.json();
           console.error("Server Error:", err.error);
         } catch (e) {
-          const text = await response.text();
+          const text = await res.text();
           console.error("Non-JSON response:", text);
         }
       }
