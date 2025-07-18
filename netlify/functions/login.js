@@ -1,4 +1,4 @@
-import { sql } from "../../lib/db.js";
+import { sql } from "../../lib/db.mjs";
 import jwt from "jsonwebtoken";
 
 const SECRET = process.env.JWT_SECRET;

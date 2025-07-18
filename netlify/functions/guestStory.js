@@ -1,4 +1,4 @@
-import { sql } from "../../lib/db.js";
+import { sql } from "../../lib/db.mjs";
 
 function generateGuestName() {
   return `guest_${Math.floor(1000 + Math.random() * 9000)}`;

@@ -1,4 +1,4 @@
-import { sql } from "../../lib/db.js";
+import { sql } from "../../lib/db.mjs";
 
 export async function handler(event) {
   const { username, email, password } = JSON.parse(event.body);

@@ -1,5 +1,4 @@
-import { neon } from "@neondatabase/serverless";
-const sql = neon(process.env.DATABASE_URL);
+import { sql } from "../../lib/db.mjs";
 
 export async function handler(event) {
   const { id } = JSON.parse(event.body);

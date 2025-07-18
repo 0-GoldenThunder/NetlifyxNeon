@@ -1,3 +1,5 @@
+import { sql } from "../../lib/db.mjs";
+
 export async function handler(event) {
   let payload;
 
