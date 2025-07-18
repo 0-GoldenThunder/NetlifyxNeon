@@ -8,7 +8,13 @@ export async function handler(event) {
 
   try {
     await sql`DELETE FROM stories WHERE id = ${id}`;
-    return { statusCode: 200, body: JSON.stringify({ success: true }) };
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ success: true }),
+    };
   } catch (err) {
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }

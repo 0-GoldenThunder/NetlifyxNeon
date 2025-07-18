@@ -7,8 +7,8 @@ const API = {
     ADD_STORY: `${BASE_URL}/addStory`,
     ADD_STORY_GUEST: `${BASE_URL}/guestStory`,
     GET_ALL_STORIES: `${BASE_URL}/getAllStories`,
-    SUBSCRIBE_NOTIFICATIONS: `${BASE_URL}/notifications-subscribe`,
-    UNSUBSCRIBE_NOTIFICATIONS: `${BASE_URL}/notifications-unsubscribe`,
+    SUBSCRIBE_NOTIFICATIONS: `${BASE_URL}/subscribeNotifications`,
+    UNSUBSCRIBE_NOTIFICATIONS: `${BASE_URL}/unsubscribeNotifications`,
     CONNECT: `${BASE_URL}/test`,
   },
 
@@ -136,9 +136,6 @@ const API = {
         headers,
         body: JSON.stringify(payload),
       });
-      console.log("🔍 Response headers:", [...res.headers.entries()]);
-      const rawText = await res.clone().text(); // clone avoids stream re-read
-      console.log("📦 Raw response body:", rawText);
 
       return await this.safeParse(res);
     } catch (err) {
@@ -159,9 +156,6 @@ const API = {
         headers,
         body: JSON.stringify(payload),
       });
-      console.log("🔍 Response headers:", [...res.headers.entries()]);
-      const rawText = await res.clone().text(); // clone avoids stream re-read
-      console.log("📦 Raw response body:", rawText);
 
       return await this.safeParse(res);
     } catch (err) {

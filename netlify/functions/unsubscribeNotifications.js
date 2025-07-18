@@ -11,26 +11,31 @@ export async function handler(event) {
     };
   }
 
-  const { endpoint, keys } = payload;
-  const { auth, p256dh } = keys || {};
+  const { endpoint } = payload;
 
-  if (!endpoint || !auth || !p256dh) {
+  if (!endpoint) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: "Missing required subscription fields" }),
+      body: JSON.stringify({ error: "Missing required field: endpoint" }),
     };
   }
 
   try {
-    // Simulate DB insert or log
-    console.log("📬 Subscribing:", { endpoint, auth, p256dh });
+    // Simulate DB removal or log
+    console.log("🔕 Unsubscribing:", endpoint);
 
     return {
-      statusCode: 201,
-      body: JSON.stringify({ success: true, message: "Subscription stored" }),
+      statusCode: 200,
+      body: JSON.stringify({
+        success: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        message: "Unsubscription successful",
+      }),
     };
   } catch (err) {
-    console.error("📛 Subscription error:", err.message);
+    console.error("📛 Unsubscription error:", err.message);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: "Server error", reason: err.message }),

@@ -27,7 +27,13 @@ export async function handler(event) {
 
     return {
       statusCode: 201,
-      body: JSON.stringify({ success: true, message: "Subscription stored" }),
+      body: JSON.stringify({
+        success: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        message: "Subscription stored",
+      }),
     };
   } catch (err) {
     console.error("📛 Subscription error:", err.message);

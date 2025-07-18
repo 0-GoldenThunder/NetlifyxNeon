@@ -40,7 +40,9 @@ export async function handler(event) {
   if (!description || !photo_url) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: "Missing required fields: description or photo_url" }),
+      body: JSON.stringify({
+        error: "Missing required fields: description or photo_url",
+      }),
     };
   }
 
@@ -52,7 +54,13 @@ export async function handler(event) {
 
     return {
       statusCode: 201,
-      body: JSON.stringify({ success: true, creator }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        success: true,
+        creator,
+      }),
     };
   } catch (dbErr) {
     console.error("📛 Database error:", dbErr.message);

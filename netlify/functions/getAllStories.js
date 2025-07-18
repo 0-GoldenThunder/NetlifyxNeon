@@ -6,6 +6,9 @@ export async function handler() {
     const result = await sql`SELECT * FROM stories ORDER BY created_at DESC`;
     return {
       statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ listStory: result }),
     };
   } catch (err) {

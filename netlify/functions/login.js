@@ -11,7 +11,10 @@ export async function handler(event) {
     const user = result[0];
 
     if (!user || user.password !== password) {
-      return { statusCode: 401, body: JSON.stringify({ error: "Invalid credentials" }) };
+      return {
+        statusCode: 401,
+        body: JSON.stringify({ error: "Invalid credentials" }),
+      };
     }
 
     const token = jwt.sign(
@@ -22,6 +25,9 @@ export async function handler(event) {
 
     return {
       statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ token, username: user.username }),
     };
   } catch (err) {
