@@ -10,7 +10,10 @@ export async function handler(event) {
     const { description, photo_url, lat, lon } = JSON.parse(event.body);
 
     if (!description || !photo_url) {
-      return { statusCode: 400, body: JSON.stringify({ error: "Missing required fields" }) };
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "Missing required fields" }),
+      };
     }
 
     const creator = generateGuestName();
@@ -20,8 +23,19 @@ export async function handler(event) {
       VALUES (${description}, ${photo_url}, ${lat}, ${lon}, ${creator})
     `;
 
-    return { statusCode: 201, body: JSON.stringify({ success: true, creator }), event};
+    return {
+      statusCode: 201,
+      body: JSON.stringify({ success: true, creator }),
+    };
   } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) ,event};
+    const safeError = {
+      error: err?.message || "Unexpected error",
+      details: err?.stack || null,
+    };
+
+    return {
+      statusCode: 500,
+      body: JSON.stringify(safeError),
+    };
   }
 }

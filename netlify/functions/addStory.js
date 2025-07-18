@@ -23,6 +23,6 @@ export async function handler(event) {
 
     return { statusCode: 201, body: JSON.stringify({ success: true }) };
   } catch (err) {
-    return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized or invalid token" }) };
+    return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized or invalid token",  }) };
   }
 }

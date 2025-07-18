@@ -63,16 +63,10 @@ const API = {
     }
   },
 
-  async uploadStory(
-    { description, photo_url, lat = null, lon = null },
-    isGuest = false
-  ) {
-    const formData = {
-      description: description,
-      photo_url: photo_url,
-      lat: lat,
-      lon: lon,
-    };
+  async uploadStory(story, isGuest = false) {
+    console.log(story);
+
+    const formData = story;
     // formData.append("description", description);
     // formData.append("photo_url", photo_url);
     // if (lat !== null) formData.append("lat", lat);
@@ -100,14 +94,21 @@ const API = {
       });
       const result = await res.json();
 
-      if (!res.ok) {
-        console.error("Upload error:", result.message);
-        alert(`Upload failed: ${result.message}`);
+      if (!response.ok) {
+        try {
+          const err = await response.json();
+          console.error("Server Error:", err.error);
+        } catch (e) {
+          const text = await response.text();
+          console.error("Non-JSON response:", text);
+        }
       }
+
+      console.log(result);
 
       return result;
     } catch (err) {
-      console.error("Upload failed:", err.message);
+      console.error("Upload failed:", err);
       return { success: false };
     }
   },
